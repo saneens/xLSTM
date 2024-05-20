@@ -27,7 +27,7 @@ class mLSTM(nn.Module):
         self.right_projection = nn.Linear(input_dim, self.hidden_dim)
         self.down_projection = nn.Linear(self.hidden_dim, input_dim)
         
-        self.causal_convolution = CausalConv1d(1, 1, kernel_size=kernel_size, padding=(kernel_size-1))
+        self.causal_convolution = nn.Conv1d(1, 1, kernel_size=kernel_size, padding=(kernel_size-1))
         
         self.skip_connection = nn.Conv1d(self.projection_dim, self.hidden_dim, kernel_size=1, bias=False)
         
@@ -57,7 +57,7 @@ class mLSTM(nn.Module):
         lt = self.left_projection(xn)
         rt = self.right_projection(xn)
         
-        lc = self.causal_convolution(lt)
+        lc = self.causal_convolution(lt.view(batch_size, 1, self.projection_dim))[..., :(self.projection_dim)]
         lc = silu(lc).squeeze()
         
         qt = self.query_linear(lc)
@@ -66,7 +66,7 @@ class mLSTM(nn.Module):
 
         qt = qt.view(batch_size, self.num_heads, self.head_dim)
         kt = kt.view(batch_size, self.num_heads, self.head_dim)
-        vt = qt.view(batch_size, self.num_heads, self.head_dim)
+        vt = vt.view(batch_size, self.num_heads, self.head_dim)
         
         it = self.input_gate(lc)
         ft = self.forget_gate(lc)
