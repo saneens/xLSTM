@@ -52,11 +52,11 @@ class mLSTM(nn.Module):
     def forward(self, sequence, hidden):
         c_prev, n_prev, m_prev = hidden
         batch_size = c_prev.shape[0]
-
+        
         xn = self.input_normalization(sequence)
         lt = self.left_projection(xn)
         rt = self.right_projection(xn)
-        
+
         lc = self.causal_convolution(lt.view(batch_size, 1, self.projection_dim))[..., :(self.projection_dim)]
         lc = silu(lc).squeeze()
         
@@ -94,3 +94,17 @@ class mLSTM(nn.Module):
         out = self.down_projection(out)
         
         return out + sequence, (ct, nt, mt)
+
+    def reset_parameters(self):
+        self.input_normalization.reset_parameters()
+        self.left_projection.reset_parameters()
+        self.right_projection.reset_parameters()
+        self.down_projection.reset_parameters()
+        self.causal_convolution.reset_parameters()
+        self.skip_connection.reset_parameters()
+        self.input_gate.reset_parameters()
+        self.forget_gate.reset_parameters()
+        self.output_gate.reset_parameters()
+        self.query_linear.reset_parameters()
+        self.key_linear.reset_parameters()
+        self.value_linear.reset_parameters()
